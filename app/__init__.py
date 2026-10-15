@@ -27,7 +27,7 @@ def create_app():
     db.init_app(app)
 
     with app.app_context():
-    from  app.source.admin.menu.model import MenuItem
+    from app.source.admin.menu.model import MenuItem
     db.create_all()
 
     from app.source.menu.routes import register_routes
