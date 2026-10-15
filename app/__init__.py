@@ -1,5 +1,6 @@
-from flask import Flask
+from flask import Flask, app
 from flask_sqlalchemy import SQLAlchemy
+import os
 
 db = SQLAlchemy()
 
@@ -9,8 +10,9 @@ def create_app():
     app.config['SECRET_KEY'] = 'mysecretkey123'
     app.config['SESSION_PERMANENT'] = False
     
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:balaji@localhost:5432/rms'
-
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL',
+    'postgresql://postgres:balaji@localhost:5432/refdr_db')
     db.init_app(app)
 
     
