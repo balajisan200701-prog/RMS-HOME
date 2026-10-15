@@ -1,0 +1,442 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_green.css">
+
+<style>
+
+.bg-purple{
+    background: purple;
+    color: white;
+}
+
+</style>
+
+<div class="container">
+
+    <h1 class="display-5 my-2"
+        style="color:#ff6600;">
+
+        Billing Management
+
+    </h1>
+
+</div>
+
+
+
+  
+
+<!-- FILTER -->
+<div class="container mt-4">
+
+    <div class="card">
+
+        <div class="card-body">
+
+            <form method="GET"
+                  action="/admin/bill">
+
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+
+                        <input type="text"
+                               name="search"
+                               class="form-control"
+                               placeholder="Search Name / Phone"
+                               value="{{ request.args.get('search','') }}">
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <input type="text"
+                               id="date_range"
+                               name="date_range"
+                               class="form-control"
+                               placeholder="From Date - To Date">
+
+                    </div>
+
+                    <div class="col-md-1">
+
+                        <button class="btn btn-primary w-100">
+
+                            Search
+
+                        </button>
+
+                    </div>
+
+                    <div class="col-md-1">
+
+                        <a href="/admin/bill"
+                           class="btn btn-secondary w-100">
+
+                            Reset
+
+                        </a>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <a href="/admin/bill-export"
+                           class="btn btn-success w-100">
+
+                            CSV
+
+                        </a>
+
+                    </div>
+
+                    <div class="col-md-1">
+
+                        <a href="/admin/add-bill"
+                           class="btn btn-info w-100">
+
+                            Add
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- TABLE -->
+<div class="container mt-4">
+
+<table class="table table-hover table-bordered text-center">
+
+    <thead class="table-primary">
+
+        <tr>
+
+            <th>Name</th>
+
+            <th>Phone</th>
+
+            <th>Items</th>
+
+            <th>Total Qty</th>
+
+            <th>Total Amount</th>
+
+            <th>Payment</th>
+
+            <th>Status</th>
+
+            <th>Date</th>
+
+            <th>Action</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% if not_found %}
+
+        <tr>
+
+            <td colspan="9"
+                class="text-danger fw-bold py-4">
+
+                ❌ No Records Found
+
+            </td>
+
+        </tr>
+
+    {% elif records|length == 0 %}
+
+        <tr>
+
+            <td colspan="9"
+                class="text-muted py-4">
+
+                No Data Available
+
+            </td>
+
+        </tr>
+
+    {% else %}
+
+        {% for row in records %}
+
+        <tr>
+
+            <!-- NAME -->
+            <td>
+
+                {{ row.customer_name }}
+
+            </td>
+
+            <!-- PHONE -->
+            <td>
+
+                {{ row.phone_no }}
+
+            </td>
+
+
+<!-- ITEMS -->
+<td class="text-start">
+
+{% set items = row.bill_items %}
+
+{% if items %}
+
+    {% for item in items %}
+
+    <div>
+
+        {{ item.item_name }} × {{ item.quantity }}
+
+    </div>
+
+    {% endfor %}
+
+{% else %}
+
+    No Items
+
+{% endif %}
+
+</td>
+
+
+
+            <!-- TOTAL QTY -->
+            <td>
+
+                {{ row.quantity }}
+
+            </td>
+
+            <!-- TOTAL AMOUNT -->
+            <td>
+
+                ₹ {{ "%.2f"|format(row.total_amount) }}
+
+            </td>
+
+            <!-- PAYMENT -->
+            <td>
+
+                {% if row.payment_method == "Cash" %}
+
+                    <span class="badge bg-success">
+
+                        Cash
+
+                    </span>
+
+                {% elif row.payment_method == "GPay" %}
+
+                    <span class="badge bg-primary">
+
+                        GPay
+
+                    </span>
+
+                {% elif row.payment_method == "PhonePe" %}
+
+                    <span class="badge bg-purple">
+
+                        PhonePe
+
+                    </span>
+
+                {% else %}
+
+                    <span class="badge bg-dark">
+
+                        {{ row.payment_method }}
+
+                    </span>
+
+                {% endif %}
+
+            </td>
+
+            <!-- STATUS -->
+            <td>
+
+                {% if row.payment_status == "Paid" %}
+
+                    <span class="badge bg-success">
+
+                        Paid
+
+                    </span>
+
+                {% else %}
+
+                    <span class="badge bg-danger">
+
+                        Pending
+
+                    </span>
+
+                {% endif %}
+
+            </td>
+
+            <!-- DATE -->
+            <td>
+
+                {{ row.date.strftime('%d-%m-%Y %I:%M %p') }}
+
+            </td>
+
+            <!-- ACTION -->
+            <td>
+
+                <a class="btn btn-warning btn-sm"
+                   href="/admin/update-bill/{{ row.id }}">
+
+                    ✏️
+
+                </a>
+
+                <a class="btn btn-danger btn-sm"
+                   href="/admin/delete-bill/{{ row.id }}">
+
+                    🗑️
+
+                </a>
+
+                <a class="btn btn-primary btn-sm"
+                   href="/admin/print-bill/{{ row.id }}">
+
+                    🖨️
+
+                </a>
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    {% endif %}
+
+    </tbody>
+
+</table>
+
+</div>
+
+<!-- PAGINATION -->
+<div class="container d-flex justify-content-center">
+
+<nav>
+
+<ul class="pagination">
+
+{% if pagination.has_prev %}
+
+<li class="page-item">
+
+<a class="page-link"
+href="{{ url_for(
+'billing',
+page=pagination.prev_num,
+search=request.args.get('search',''),
+date_range=request.args.get('date_range','')
+) }}">
+
+Prev
+
+</a>
+
+</li>
+
+{% endif %}
+
+{% for page_num in pagination.iter_pages() %}
+
+{% if page_num %}
+
+<li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+
+<a class="page-link"
+href="{{ url_for(
+'billing',
+page=page_num,
+search=request.args.get('search',''),
+date_range=request.args.get('date_range','')
+) }}">
+
+{{ page_num }}
+
+</a>
+
+</li>
+
+{% endif %}
+
+{% endfor %}
+
+{% if pagination.has_next %}
+
+<li class="page-item">
+
+<a class="page-link"
+href="{{ url_for(
+'billing',
+page=pagination.next_num,
+search=request.args.get('search',''),
+date_range=request.args.get('date_range','')
+) }}">
+
+Next
+
+</a>
+
+</li>
+
+{% endif %}
+
+</ul>
+
+</nav>
+
+</div>
+
+<!-- DATE PICKER -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+
+flatpickr("#date_range", {
+
+    mode: "range",
+
+    dateFormat: "d-m-Y"
+
+});
+
+</script>
+
+{% endblock %}
+

@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container">
+    <h1 class="display-5 my-2" style="color: #ff6600;">
+        Sales Report
+    </h1>
+</div>
+
+<!-- FILTER -->
+<div class="container">
+    <form method="GET" action="/admin/sales">
+
+        <div class="card shadow-sm p-4 mb-4">
+
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-3">
+                    <label>Date Range</label>
+                    <input type="text"
+                           name="date_range"
+                           id="date_range"
+                           value="{{ date_range }}"
+                           class="form-control"  placeholder="Select Date Range">
+                </div>
+
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100">Search</button>
+                </div>
+
+                <div class="col-md-2">
+                    <a href="/admin/sales" class="btn btn-danger w-100">Clear</a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+</div>
+
+<!-- SUMMARY -->
+<div class="container my-4">
+    <div class="row">
+
+        <div class="col-md-4 text-center">
+            <div class="card p-3 shadow-sm">
+                <h5>Total Revenue</h5>
+                <h3>₹ {{ "%.2f"|format(total_sales) }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4 text-center">
+            <div class="card p-3 shadow-sm">
+                <h5>Total Orders</h5>
+                <h3>{{ total_orders }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4 text-center">
+            <div class="card p-3 shadow-sm">
+                <h5>Total Customers</h5>
+                <h3>{{ total_customers }}</h3>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- CHART -->
+<div class="container my-4">
+    <div class="card shadow-sm p-3">
+        <h4 class="mb-3">Sales Trend</h4>
+
+        <div style="height:400px;">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- SALES SUMMARY TABLE -->
+<div class="container">
+    <h5>Sales Summary</h5>
+
+    <table class="table table-bordered text-center">
+
+        <thead class="table-primary">
+            <tr>
+                <th>Date</th>
+                <th>Total Sales</th>
+                <th>Orders</th>
+                <th>Avg Order</th>
+                <th>Customers</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in sales %}
+            <tr>
+                <td>{{ item.date.strftime('%d-%m-%Y') }}</td>
+                <td>₹ {{ "%.2f"|format(item.totalsales) }}</td>
+                <td>{{ item.totalorders }}</td>
+                <td>₹ {{ "%.2f"|format(item.avgorderval) }}</td>
+                <td>{{ item.totalcustomer }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+</div>
+
+<!-- RECENT ORDERS (PAGINATED) -->
+<div class="container">
+    <h5>Recent Orders</h5>
+
+    <table class="table table-bordered text-center">
+
+        <thead class="table-primary">
+            <tr>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Items</th>
+                <th>Qty</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for row in records %}
+            <tr>
+                <td>{{ row.customer_name }}</td>
+                <td>{{ row.phone_no }}</td>
+
+                <td class="text-start">
+                    {% for item in row.bill_items %}
+                        <div>{{ item.item_name }} × {{ item.quantity }}</div>
+                    {% endfor %}
+                </td>
+
+                <td>{{ row.bill_items | sum(attribute='quantity') }}</td>
+
+                <td class="fw-bold text-success">
+                    ₹ {{ "%.2f"|format(row.total_amount) }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-center mt-3">
+
+        <ul class="pagination">
+
+            {% if pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="{{ url_for('sales_report', page=pagination.prev_num, date_range=date_range) }}">
+                    Prev
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ pagination.page }}</span>
+            </li>
+
+            {% if pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="{{ url_for('sales_report', page=pagination.next_num, date_range=date_range) }}">
+                    Next
+                </a>
+            </li>
+            {% endif %}
+
+        </ul>
+
+    </div>
+
+</div>
+
+<!-- SCRIPT -->
+<script>
+
+flatpickr("#date_range", {
+    mode: "range",
+    dateFormat: "d-m-Y"
+});
+
+const labels = '{{ chart_labels | tojson }}';
+const salesData = '{{ chart_values | tojson }}';
+
+console.log("Labels:", labels);
+console.log("Sales:", salesData);
+
+const ctx = document
+    .getElementById("salesChart")
+    .getContext("2d");
+
+new Chart(ctx, {
+    type: "line",
+
+    data: {
+        labels: labels,
+
+        datasets: [{
+            label: "Daily Sales",
+
+            data: salesData,
+
+            borderColor: "#ff6600",
+            backgroundColor: "rgba(255,102,0,0.2)",
+
+            borderWidth: 3,
+
+            fill: true,
+
+            tension: 0.4,
+
+            pointRadius: 5,
+
+            pointHoverRadius: 8
+        }]
+    },
+
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        plugins: {
+            legend: {
+                display: true
+            }
+        },
+
+        scales: {
+            y: {
+                beginAtZero: true,
+
+                ticks: {
+                    callback: function(value) {
+                        return "₹" + value;
+                    }
+                }
+            }
+        }
+    }
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,492 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+
+body{
+    background:#f5f5f5;
+    color:#111;
+}
+
+.billing-wrapper{
+    max-width:1100px;
+    margin:auto;
+}
+
+.card-box{
+    background:white;
+    border:1px solid #ddd;
+    border-radius:16px;
+    padding:20px;
+}
+
+.table{
+    color:#111;
+}
+
+.table td,
+.table th{
+    border-color:#ddd !important;
+    vertical-align:middle;
+}
+
+.add-btn{
+    width:46px;
+    height:38px;
+    border:1px solid #ccc;
+    background:white;
+    color:#111;
+    border-radius:10px;
+    font-size:20px;
+}
+
+.add-btn:hover{
+    background:#f0f0f0;
+}
+
+.form-control{
+    background:white;
+    border:1px solid #ccc;
+    color:#111;
+}
+
+.form-control:focus{
+    background:white;
+    color:#111;
+    border-color:#999;
+    box-shadow:none;
+}
+
+.order-item{
+    border-bottom:1px solid #eee;
+    padding:12px 0;
+}
+
+.qty-btn{
+    width:30px;
+    height:30px;
+    border:none;
+    border-radius:8px;
+    background:#eee;
+    color:#111;
+}
+
+.qty-btn:hover{
+    background:#ddd;
+}
+
+.total-box{
+    background:#111;
+    color:white;
+    border-radius:12px;
+    padding:14px;
+}
+
+.empty-text{
+    text-align:center;
+    color:#777;
+    padding:25px 0;
+}
+
+@media(max-width:768px){
+
+    .billing-wrapper{
+        padding:10px;
+    }
+
+}
+
+@media print {
+
+    body *{
+        visibility:hidden;
+    }
+
+    .print-area,
+    .print-area *{
+        visibility:visible;
+    }
+
+    .print-area{
+        position:absolute;
+        left:0;
+        top:0;
+        width:100%;
+        background:white;
+        padding:20px;
+    }
+
+    .no-print{
+        display:none !important;
+    }
+    @media print {
+
+    .payment-section{
+        display:none !important;
+    }
+
+}
+
+}
+
+</style>
+
+<div class="container py-4 billing-wrapper">
+
+    <div class="row g-4">
+
+        <!-- MENU -->
+
+        <div class="col-lg-6 no-print">
+
+            <div class="card-box">
+
+                <h4 class="mb-4">
+                    ☰ Menu
+                </h4>
+
+                <table class="table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>#</th>
+                            <th>Item</th>
+                            <th>Price</th>
+                            <th>Add</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in menu_items %}
+
+                        <tr>
+
+                            <td>
+                                {{ loop.index }}
+                            </td>
+
+                            <td>
+                                {{ item.item_name }}
+                            </td>
+
+                            <td>
+                                ₹{{ item.price }}
+                            </td>
+
+                            <td>
+
+                                <button type="button"
+                                        class="add-btn"
+                                        onclick="addItem(
+                                            '{{ item.item_name }}',
+                                            {{ item.price }}
+                                        )">
+
+                                    +
+
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- ORDER -->
+
+        <div class="col-lg-6">
+
+            <div class="card-box print-area">
+
+                <h4 class="mb-4">
+                    🧾 Update Bill
+                </h4>
+
+                <form method="POST">
+
+                    <!-- CUSTOMER -->
+
+                    <input type="text"
+                           name="customer_name"
+                           class="form-control mb-3"
+                           placeholder="Customer name"
+                           value="{{ record.customer_name }}">
+
+                    <input type="text"
+                           name="phone_no"
+                           class="form-control mb-4"
+                           placeholder="Phone number"
+                           value="{{ record.phone_no }}">
+
+                    <!-- ORDER LIST -->
+
+                    <div id="order-list">
+
+                    </div>
+
+                    <!-- TOTAL -->
+
+                    <div class="total-box
+                                d-flex
+                                justify-content-between
+                                align-items-center
+                                mt-4">
+
+                        <h5 class="mb-0">
+
+                            Total
+
+                        </h5>
+
+                        <h3 class="mb-0"
+                            id="grand-total">
+
+                            ₹0
+
+                        </h3>
+
+                    </div>
+
+                    <!-- HIDDEN TOTAL -->
+
+                    <input type="hidden"
+                           name="total_amount"
+                           id="total-input"
+                           value="{{ record.total_amount }}">
+
+                    <!-- BUTTONS -->
+
+                    <button type="button"
+                            onclick="window.print()"
+                            class="btn btn-secondary w-100 mt-3 no-print">
+
+                        Print Bill
+
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-dark w-100 mt-3 no-print">
+
+                        Update Bill
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let order = [
+
+{% for bill in bill_items %}
+
+{
+    name:`{{ bill.item_name }}`,
+    price:{{ bill.price }},
+    qty:{{ bill.quantity }}
+},
+
+{% endfor %}
+
+];
+
+function addItem(name, price){
+
+    let existing =
+    order.find(item => item.name === name);
+
+    if(existing){
+
+        existing.qty++;
+
+    }else{
+
+        order.push({
+
+            name:name,
+            price:price,
+            qty:1
+
+        });
+
+    }
+
+    renderOrder();
+
+}
+
+function changeQty(index, value){
+
+    order[index].qty += value;
+
+    if(order[index].qty <= 0){
+
+        order.splice(index,1);
+
+    }
+
+    renderOrder();
+
+}
+
+function renderOrder(){
+
+    let list =
+    document.getElementById("order-list");
+
+    if(order.length === 0){
+
+        list.innerHTML = `
+
+        <div class="empty-text">
+
+            No items added yet
+
+        </div>
+
+        `;
+
+        document.getElementById(
+            "grand-total"
+        ).innerText = "₹0";
+
+        document.getElementById(
+            "total-input"
+        ).value = 0;
+
+        return;
+
+    }
+
+    list.innerHTML = "";
+
+    let total = 0;
+
+    order.forEach((item,index)=>{
+
+        let subtotal =
+        item.price * item.qty;
+
+        total += subtotal;
+
+        list.innerHTML += `
+
+        <div class="order-item">
+
+            <div class="d-flex
+                        justify-content-between
+                        align-items-center">
+
+                <div>
+
+                    <div class="fw-semibold">
+
+                        ${item.name}
+
+                    </div>
+
+                    <small style="color:#777;">
+
+                        ₹${item.price}
+
+                    </small>
+
+                </div>
+
+                <div class="d-flex
+                            align-items-center
+                            gap-2
+                            no-print">
+
+                    <button type="button"
+                            class="qty-btn"
+                            onclick="changeQty(
+                                ${index},
+                                -1
+                            )">
+
+                        -
+
+                    </button>
+
+                    <strong>
+
+                        ${item.qty}
+
+                    </strong>
+
+                    <button type="button"
+                            class="qty-btn"
+                            onclick="changeQty(
+                                ${index},
+                                1
+                            )">
+
+                        +
+
+                    </button>
+
+                </div>
+
+                <div class="fw-bold">
+
+                    ₹${subtotal}
+
+                </div>
+
+            </div>
+
+            <input type="hidden"
+                   name="item_name"
+                   value="${item.name}">
+
+            <input type="hidden"
+                   name="price"
+                   value="${item.price}">
+
+            <input type="hidden"
+                   name="quantity"
+                   value="${item.qty}">
+
+        </div>
+
+        `;
+
+    });
+
+    document.getElementById(
+        "grand-total"
+    ).innerText = "₹" + total;
+
+    document.getElementById(
+        "total-input"
+    ).value = total;
+
+}
+
+renderOrder();
+
+</script>
+
+{% endblock %}

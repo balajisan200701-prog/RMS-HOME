@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Menu - Foodie Restro</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/menu.css') }}">
+    </head>
+
+    <body>
+        <nav class="navbar navbar-expand-lg bg-white fixed-top shadow-sm px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="/">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                    alt="Foodie Restro Logo" 
+                    class="logo me-2">
+                Foodie Restro
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="nav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item ms-3">
+                        <a class="nav-link fw-semibold" href="/">Home</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="nav-link fw-semibold active" href="/menu">Menu</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="nav-link fw-semibold" href="#about">About Us</a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="nav-link fw-semibold" href="#contact">Contact Us</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="container mt-5">
+            <h2 class="section-title mb-4">🍳Today's Special</h2>
+            <div class="menu-card mx-auto">
+
+                <h4 class="text-center mb-3">🍽 Foodie Restro Specials</h4>
+
+                <ul class="list-group list-group-flush">
+
+                    {% for item in daily_items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ item.item_name }}</span>
+                        <span class="fw-bold">₹{{ item.price }}</span>
+                    </li>
+                    {% endfor %}
+
+                </ul>
+
+            </div>
+        </div>
+        <section class="container mt-5">
+            <div class="position-relative mb-4 text-center">
+                <h3 class="text-center section-title">Shop by Category</h3>
+            </div>
+            <div class="d-flex justify-content-center flex-wrap gap-3">
+                <div class="category-card" onclick="filterCategory('All')">All</div>
+                <div class="category-card" onclick="filterCategory('Pizza')">🍕Pizza</div>
+                <div class="category-card" onclick="filterCategory('Burgers')">🍔Burgers</div>
+                <div class="category-card" onclick="filterCategory('Snacks')">🍟Snacks</div>
+                <div class="category-card" onclick="filterCategory('Drinks')">🥤Drinks</div>
+            </div>
+        </section>
+        <section class="container">
+            <div class="position-relative mt-5 mb-4 text-center">
+                <h2 class="text-center section-title">🍽 Full Menu</h2>
+
+                <div class="position-absolute end-0 top-50 translate-middle-y">
+                    <input id="searchInput" class="form-control search-box"
+                        placeholder="Search food..." onkeyup="searchFood()">
+                </div>
+            </div>
+            <div class="row g-4">
+                {% for item in menu %}
+                <div class="col-md-3 col-sm-6 menu-item" data-category="{{ item.category }}">
+                    <div class="card food-card h-100">
+
+                        <img src="{{ url_for('static', filename='images/uploads/' + item.image) }}"
+                            class="card-img-top food-img">
+
+                        <div class="card-body text-center">
+                            <h5>{{ item.item_name }}</h5>
+                            <p>{{ item.category }}</p>
+                            <p>{{ item.description }}</p>
+                            
+                            <p class="fw-bold">₹{{ item.price }}</p>
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+
+        </section>
+        {% include 'about.html' %}
+        <script>
+            function filterCategory(category) {
+                let items = document.querySelectorAll(".menu-item");
+
+                items.forEach(item => {
+                    let itemCategory = item.getAttribute("data-category");
+
+                    if (category === "All" || itemCategory === category) {
+                        item.style.display = "block";
+                    } else {
+                        item.style.display = "none";
+                    }
+                });
+            }
+
+            function searchFood() {
+                let input = document.getElementById("searchInput").value.toLowerCase();
+                let items = document.querySelectorAll(".menu-item");
+
+                items.forEach(item => {
+                    let name = item.querySelector("h5").innerText.toLowerCase();
+
+                    if (name.includes(input)) {
+                        item.style.display = "block";
+                    } else {
+                        item.style.display = "none";
+                    }
+                });
+            }
+        </script>
+     </body>
+</html>

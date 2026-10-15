@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<head>
+    <title>Worker Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1 class="display-5 my-2" style="color: #ff6600;">Worker Management</h1>
+    <p>Manage your worker here </p>
+  </div>
+  <div class="container d-flex justify-content-end">
+    <a href="/admin/add-worker" class="btn btn-primary">Add Worker</a>
+  </div>
+
+
+
+<div class="container mt-3">
+    <table class="table table-hover text-center">
+        <thead class="table-primary">
+            <tr >
+                    <th>Worker id</th>
+                    <th>Name</th>
+                    <th>Phone No</th>
+                    <th>Address</th>
+                    <th>Status</th>
+                     <th>Action</th>
+                </tr>
+        </thead>
+        <tbody>
+             {% for worker in workers %}
+                <tr class="align-middle">
+                    <td>{{ worker.id }}</td>
+                    <td>{{ worker.name }}</td>
+                    <td>{{ worker.phone }}</td>
+                    <td>{{ worker.address }}</td>
+                    <td>{{ worker.status }}</td>
+                    <td>
+                        <a href="/admin/update-worker/{{ worker.id }}" class="btn btn-sm btn-outline-primary">✏️</a>
+                        <a href="/admin/delete-worker/{{ worker.id }}" class="btn btn-sm btn-outline-danger">🗑️</a>
+                    </td>
+                <tr>
+                {% endfor %}
+        </tbody>
+
+    </table>
+</div>
+
+
+    
+</body>
+
+
+
+{% endblock %}
